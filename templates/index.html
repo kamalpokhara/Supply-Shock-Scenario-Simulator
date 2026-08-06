@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supply Shock Scenario Simulator</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f6f8; color: #222; }
+        .container { max-width: 950px; margin: 0 auto; padding: 30px 20px; }
+        h1 { font-size: 24px; margin-bottom: 4px; }
+        .subtitle { color: #666; margin-bottom: 25px; }
+        .card { background: white; border-radius: 8px; padding: 20px 25px; margin-bottom: 20px;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                       gap: 8px 20px; margin: 15px 0; }
+        .source-row { display: flex; align-items: center; gap: 8px; }
+        .source-row input[type=number] { width: 70px; padding: 4px 6px; border: 1px solid #ccc;
+                                          border-radius: 4px; }
+        button { background: #c0392b; color: white; border: none; padding: 10px 22px;
+                 border-radius: 5px; font-size: 15px; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #a93226; }
+        .summary-grid { display: flex; gap: 25px; flex-wrap: wrap; }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 22px; font-weight: 600; }
+        .summary-stat .label { font-size: 12px; color: #777; }
+        .charts { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .charts img { max-width: 100%; border-radius: 6px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 14px; }
+        th, td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: right; }
+        th { background: #fafafa; color: #555; font-weight: 600; }
+        td:first-child, th:first-child { text-align: left; }
+        .positive { color: #c0392b; font-weight: 600; }
+        .negative { color: #2c7fb8; font-weight: 600; }
+        .error { color: #c0392b; background: #fdecea; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌾 Supply Shock Scenario Simulator</h1>
+    <p class="subtitle">Choose one or more supply sources and a % change to see the predicted effect on price and risk.</p>
+
+    <div class="card">
+        {% if error %}<p class="error">{{ error }}</p>{% endif %}
+        <form method="POST">
+            <div class="source-grid">
+                {% for src in source_options %}
+                <div class="source-row">
+                    <input type="checkbox" name="sources" value="{{ src }}"
+                           {% if src in selected_sources %}checked{% endif %}>
+                    <label>{{ src }}</label>
+                    <input type="number" name="pct_{{ src }}" placeholder="%"
+                           value="{{ factors.get(src, '') }}">
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit">Run Scenario</button>
+        </form>
+    </div>
+
+    {% if summary %}
+    <div class="card">
+        <div class="summary-grid">
+            <div class="summary-stat"><div class="value">{{ summary.n_products_affected }}</div><div class="label">Products affected</div></div>
+            <div class="summary-stat"><div class="value">{{ summary.n_products_na }}</div><div class="label">Not applicable</div></div>
+            <div class="summary-stat"><div class="value">{{ "%.2f"|format(summary.mean_price_delta_pct) }}%</div><div class="label">Mean Δ price</div></div>
+            <div class="summary-stat"><div class="value">{{ "%.2f"|format(summary.median_price_delta_pct) }}%</div><div class="label">Median Δ price</div></div>
+            <div class="summary-stat"><div class="value">{{ summary.n_products_risk_increased }}</div><div class="label">Risk increased</div></div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if chart1 %}
+    <div class="card">
+        <div class="charts">
+            <img src="data:image/png;base64,{{ chart1 }}">
+            <img src="data:image/png;base64,{{ chart2 }}">
+        </div>
+    </div>
+    {% endif %}
+
+    {% if results_table %}
+    <div class="card">
+        <table>
+            <tr>
+                <th>Product</th><th>Baseline Price</th><th>Shocked Price</th>
+                <th>Δ Price %</th><th>Before Risk</th><th>After Risk</th><th>Confidence</th>
+            </tr>
+            {% for row in results_table %}
+            <tr>
+                <td>{{ row.product_name }}</td>
+                <td>{{ "%.2f"|format(row.baseline_price) }}</td>
+                <td>{{ "%.2f"|format(row.predicted_price) }}</td>
+                <td class="{{ 'positive' if row.price_delta_pct > 0 else 'negative' }}">{{ "%.2f"|format(row.price_delta_pct) }}%</td>
+                <td>{{ row.baseline_risk }}</td>
+                <td>{{ row.risk }}</td>
+                <td>{{ row.confidence }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% endif %}
+</div>
+</body>
+</html>
