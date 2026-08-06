@@ -1,4 +1,4 @@
-![Image 1](image/one.png)
-![Image 2](image/two.png)
-![Image 3](image/three.png)
-![Image 4](image/four.png)
+![Image 1](images/one.png)
+![Image 2](images/two.png)
+![Image 3](images/three.png)
+![Image 4](images/four.png)
