@@ -19,6 +19,11 @@ d = load_clean_data()
 src_cols = get_src_cols(d)
 imp_cols = [c for c in ['india', 'china', 'bhutan'] if c in src_cols]
 
+QUICK_SOURCES = ['india', 'local', 'china', 'kathmandu', 'bhutan', 'birgunj']
+QUICK_SOURCES = [s for s in QUICK_SOURCES if s in src_cols]   # safety, in case a name differs
+MORE_SOURCES = sorted([s for s in src_cols if s not in QUICK_SOURCES])
+
+
 feature_cols = (
     ['product_name', 'category', 'unit', 'm_sin', 'm_cos', 'n_sources',
      'herfindahl', 'import_share', 'domestic_share', 'n_months_present',
@@ -33,7 +38,7 @@ with open('data/processed/risk_scaling_ref.json') as f:
 
 SOURCE_OPTIONS = sorted(src_cols)
 
-
+# Got the EC boy changes price percentage
 def make_charts(results_df):
     """Returns two base64-encoded PNGs: sensitivity bar chart + risk shift chart."""
     ok = results_df[results_df['status'] == 'ok'].copy()
@@ -87,6 +92,8 @@ def index():
     factors = {}
     error = None
     chart1 = chart2 = None
+    example_up = None       # ADD THIS
+    example_down = None  
 
     if request.method == 'POST':
         selected_sources = request.form.getlist('sources')
@@ -114,6 +121,13 @@ def index():
             results_table = ok.to_dict('records')
             chart1, chart2 = make_charts(results_df)
 
+             # pick a real example of each direction for the legend
+            example_up = ok[ok['price_delta_pct'] > 0].sort_values('price_delta_pct', ascending=False)
+            example_down = ok[ok['price_delta_pct'] < 0].sort_values('price_delta_pct')
+
+            example_up = example_up.iloc[0].to_dict() if len(example_up) > 0 else None
+            example_down = example_down.iloc[0].to_dict() if len(example_down) > 0 else None
+
     return render_template(
         'index.html',
         source_options=SOURCE_OPTIONS,
@@ -124,6 +138,10 @@ def index():
         error=error,
         chart1=chart1,
         chart2=chart2,
+        quick_sources=QUICK_SOURCES, 
+        more_sources=MORE_SOURCES,
+        example_up=example_up,
+        example_down=example_down,
     )
 
 

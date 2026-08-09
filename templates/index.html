@@ -1,102 +1,410 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Supply Shock Scenario Simulator</title>
     <style>
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f4f6f8; color: #222; }
-        .container { max-width: 950px; margin: 0 auto; padding: 30px 20px; }
-        h1 { font-size: 24px; margin-bottom: 4px; }
-        .subtitle { color: #666; margin-bottom: 25px; }
-        .card { background: white; border-radius: 8px; padding: 20px 25px; margin-bottom: 20px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .source-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                       gap: 8px 20px; margin: 15px 0; }
-        .source-row { display: flex; align-items: center; gap: 8px; }
-        .source-row input[type=number] { width: 70px; padding: 4px 6px; border: 1px solid #ccc;
-                                          border-radius: 4px; }
-        button { background: #c0392b; color: white; border: none; padding: 10px 22px;
-                 border-radius: 5px; font-size: 15px; cursor: pointer; margin-top: 10px; }
-        button:hover { background: #a93226; }
-        .summary-grid { display: flex; gap: 25px; flex-wrap: wrap; }
-        .summary-stat { text-align: center; }
-        .summary-stat .value { font-size: 22px; font-weight: 600; }
-        .summary-stat .label { font-size: 12px; color: #777; }
-        .charts { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
-        .charts img { max-width: 100%; border-radius: 6px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 14px; }
-        th, td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: right; }
-        th { background: #fafafa; color: #555; font-weight: 600; }
-        td:first-child, th:first-child { text-align: left; }
-        .positive { color: #c0392b; font-weight: 600; }
-        .negative { color: #2c7fb8; font-weight: 600; }
-        .error { color: #c0392b; background: #fdecea; padding: 10px; border-radius: 5px; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        background: #f4f6f8;
+        color: #222;
+        height: 100vh;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 260px 1fr 340px;
+        height: 100vh;
+      }
+      .panel {
+        padding: 20px;
+        overflow-y: auto;
+      }
+      .left {
+        background: white;
+        border-right: 1px solid #e5e5e5;
+      }
+      .center {
+        background: #f4f6f8;
+      }
+      .right {
+        background: white;
+        border-left: 1px solid #e5e5e5;
+      }
+
+      h1 {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+      .subtitle {
+        color: #777;
+        font-size: 13px;
+        margin-bottom: 18px;
+      }
+      h3 {
+        font-size: 14px;
+        color: #444;
+        margin: 18px 0 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        padding: 6px 12px;
+        margin: 4px 4px 4px 0;
+        cursor: pointer;
+        font-size: 13px;
+        background: #fafafa;
+        user-select: none;
+      }
+      .chip.selected {
+        background: #c0392b;
+        color: white;
+        border-color: #c0392b;
+      }
+      .chip-input {
+        display: none;
+        align-items: center;
+        gap: 4px;
+        margin: 2px 0 8px 4px;
+      }
+      .chip-input.visible {
+        display: flex;
+      }
+      .chip-input input {
+        width: 60px;
+        padding: 4px 6px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .chip-input label {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .show-more-btn {
+        font-size: 12px;
+        color: #c0392b;
+        cursor: pointer;
+        margin-top: 10px;
+        display: inline-block;
+        text-decoration: underline;
+      }
+      .more-sources {
+        display: none;
+      }
+      .more-sources.visible {
+        display: block;
+      }
+
+      button.run-btn {
+        background: #c0392b;
+        color: white;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 5px;
+        font-size: 14px;
+        cursor: pointer;
+        margin-top: 18px;
+        width: 100%;
+      }
+      button.run-btn:hover {
+        background: #a93226;
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      }
+
+      .summary-grid {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .summary-stat {
+        text-align: center;
+        flex: 1;
+        min-width: 90px;
+      }
+      .summary-stat .value {
+        font-size: 20px;
+        font-weight: 700;
+        color: #c0392b;
+      }
+      .summary-stat .label {
+        font-size: 11px;
+        color: #888;
+        margin-top: 2px;
+      }
+
+      .legend {
+        font-size: 12px;
+        color: #666;
+        background: #fafafa;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        padding: 10px 14px;
+        margin-bottom: 10px;
+        line-height: 1.6;
+      }
+      .legend b {
+        color: #333;
+      }
+
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+      }
+      th,
+      td {
+        border-bottom: 1px solid #eee;
+        padding: 7px 8px;
+        text-align: right;
+      }
+      th {
+        background: #fafafa;
+        color: #555;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+      }
+      td:first-child,
+      th:first-child {
+        text-align: left;
+      }
+      .positive {
+        color: #c0392b;
+        font-weight: 600;
+      }
+      .negative {
+        color: #2c7fb8;
+        font-weight: 600;
+      }
+      .table-wrap {
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+
+      .chart-explain {
+        font-size: 12px;
+        color: #666;
+        line-height: 1.5;
+        margin-top: 6px;
+        margin-bottom: 20px;
+      }
+      .chart-explain b {
+        color: #333;
+      }
+      img.chart {
+        max-width: 100%;
+        border-radius: 6px;
+      }
+
+      .error {
+        color: #c0392b;
+        background: #fdecea;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 13px;
+      }
+      .empty-state {
+        color: #999;
+        text-align: center;
+        padding: 60px 20px;
+        font-size: 14px;
+      }
     </style>
-</head>
-<body>
-<div class="container">
-    <h1>🌾 Supply Shock Scenario Simulator</h1>
-    <p class="subtitle">Choose one or more supply sources and a % change to see the predicted effect on price and risk.</p>
+  </head>
+  <body>
+    <form method="POST" id="scenarioForm">
+      <div class="layout">
+        <!-- LEFT: source picker -->
+        <div class="panel left">
+          <h1>🌾 Scenario Simulator</h1>
+          <p class="subtitle">Pick supply sources and how much they change, then run the scenario.</p>
 
-    <div class="card">
-        {% if error %}<p class="error">{{ error }}</p>{% endif %}
-        <form method="POST">
-            <div class="source-grid">
-                {% for src in source_options %}
-                <div class="source-row">
-                    <input type="checkbox" name="sources" value="{{ src }}"
-                           {% if src in selected_sources %}checked{% endif %}>
-                    <label>{{ src }}</label>
-                    <input type="number" name="pct_{{ src }}" placeholder="%"
-                           value="{{ factors.get(src, '') }}">
-                </div>
-                {% endfor %}
+          {% if error %}
+          <p class="error">{{ error }}</p>
+          {% endif %}
+
+          <h3>Common sources</h3>
+          {% for src in quick_sources %}
+          <div class="chip {% if src in selected_sources %}selected{% endif %}" onclick="toggleSource('{{ src }}')">
+            {{ src }}
+          </div>
+          {% endfor %}
+
+          <div class="show-more-btn" onclick="toggleMore()">+ Show more sources</div>
+          <div class="more-sources" id="moreSources">
+            <h3>All sources</h3>
+            {% for src in more_sources %}
+            <div class="chip {% if src in selected_sources %}selected{% endif %}" onclick="toggleSource('{{ src }}')">
+              {{ src }}
             </div>
-            <button type="submit">Run Scenario</button>
-        </form>
-    </div>
-
-    {% if summary %}
-    <div class="card">
-        <div class="summary-grid">
-            <div class="summary-stat"><div class="value">{{ summary.n_products_affected }}</div><div class="label">Products affected</div></div>
-            <div class="summary-stat"><div class="value">{{ summary.n_products_na }}</div><div class="label">Not applicable</div></div>
-            <div class="summary-stat"><div class="value">{{ "%.2f"|format(summary.mean_price_delta_pct) }}%</div><div class="label">Mean Δ price</div></div>
-            <div class="summary-stat"><div class="value">{{ "%.2f"|format(summary.median_price_delta_pct) }}%</div><div class="label">Median Δ price</div></div>
-            <div class="summary-stat"><div class="value">{{ summary.n_products_risk_increased }}</div><div class="label">Risk increased</div></div>
-        </div>
-    </div>
-    {% endif %}
-
-    {% if chart1 %}
-    <div class="card">
-        <div class="charts">
-            <img src="data:image/png;base64,{{ chart1 }}">
-            <img src="data:image/png;base64,{{ chart2 }}">
-        </div>
-    </div>
-    {% endif %}
-
-    {% if results_table %}
-    <div class="card">
-        <table>
-            <tr>
-                <th>Product</th><th>Baseline Price</th><th>Shocked Price</th>
-                <th>Δ Price %</th><th>Before Risk</th><th>After Risk</th><th>Confidence</th>
-            </tr>
-            {% for row in results_table %}
-            <tr>
-                <td>{{ row.product_name }}</td>
-                <td>{{ "%.2f"|format(row.baseline_price) }}</td>
-                <td>{{ "%.2f"|format(row.predicted_price) }}</td>
-                <td class="{{ 'positive' if row.price_delta_pct > 0 else 'negative' }}">{{ "%.2f"|format(row.price_delta_pct) }}%</td>
-                <td>{{ row.baseline_risk }}</td>
-                <td>{{ row.risk }}</td>
-                <td>{{ row.confidence }}</td>
-            </tr>
             {% endfor %}
-        </table>
-    </div>
-    {% endif %}
-</div>
-</body>
+          </div>
+
+          <h3>Selected changes</h3>
+          <div id="selectedInputs">
+            {% for src in selected_sources %}
+            <div class="chip-input visible" data-src="{{ src }}">
+              <label>{{ src }}:</label>
+              <input type="number" name="pct_{{ src }}" value="{{ factors.get(src, '') }}" placeholder="%" />
+              <span>%</span>
+            </div>
+            {% endfor %}
+          </div>
+
+          <button type="submit" class="run-btn">Run Scenario</button>
+        </div>
+
+        <!-- CENTER: summary + table -->
+        <div class="panel center">
+          {% if summary %}
+          <div class="card">
+            <div class="summary-grid">
+               <div class="summary-stat">
+                <div class="value">95</div>
+                <div class="label">Total Commodities</div>
+              </div> 
+              <div class="summary-stat">
+                <div class="value">{{ summary.n_products_affected }}</div>
+                <div class="label">Products affected</div>
+              </div>
+              <div class="summary-stat">
+                <div class="value">{{ summary.n_products_na }}</div>
+                <div class="label">Not applicable</div>
+              </div>
+              <div class="summary-stat">
+                <div class="value">{{ "%.1f"|format(summary.mean_price_delta_pct) }}%</div>
+                <div class="label">Average price change</div>
+              </div>
+              <div class="summary-stat">
+                <div class="value">{{ "%.1f"|format(summary.median_price_delta_pct) }}%</div>
+                <div class="label">Typical price change</div>
+              </div>
+              <div class="summary-stat">
+                <div class="value">{{ summary.n_products_risk_increased }}</div>
+                <div class="label">Products now riskier</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="legend">
+              <b>How to read this table:</b> "Before" and "After" show the price/risk the model expects without and with
+              the scenario applied. <br />
+              <b>Δ Price % </b> in red means the price is expected to go up; <b>blue</b> means down.<br />
+              <b>Confidence</b> tells you how much real history backs that product's result - "reliable" means several
+              months of data support it, "single-observation" means it's based on very little history and should be
+              treated cautiously.
+            </div>
+
+            {% if example_up or example_down %}
+            <div class="legend" style="margin-bottom: 14px">
+              <b>Example readings:</b><br />
+              {% if example_up %}
+              <span class="positive"
+                >▲ {{ example_up.product_name }} +{{ "%.1f"|format(example_up.price_delta_pct) }}%</span
+              >
+              - the model expects this price to go up by <b>{{ "%.1f"|format(example_up.price_delta_pct) }}%</b>,
+              (confidence: {{ example_up.confidence }}).<br />
+              {% endif %} {% if example_down %}
+              <span class="negative"
+                >▼ {{ example_down.product_name }} {{ "%.1f"|format(example_down.price_delta_pct) }}%</span
+              >
+              - the model expects this price to go down by <b> {{ "%.1f"|format(example_down.price_delta_pct) }}%</b>,
+              (confidence: {{ example_down.confidence }}). {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="table-wrap">
+              <table>
+                <tr>
+                  <th>Product</th>
+                  <th>Before Price</th>
+                  <th>After Price</th>
+                  <th>Δ Price %</th>
+                  <th>Before Risk</th>
+                  <th>After Risk</th>
+                  <th>Confidence</th>
+                </tr>
+                {% for row in results_table %}
+                <tr>
+                  <td>{{ row.product_name }}</td>
+                  <td>{{ "%.2f"|format(row.baseline_price) }}</td>
+                  <td>{{ "%.2f"|format(row.predicted_price) }}</td>
+                  <td class="{{ 'positive' if row.price_delta_pct > 0 else 'negative' }}">
+                    {{ "%.2f"|format(row.price_delta_pct) }}%
+                  </td>
+                  <td>{{ row.baseline_risk }}</td>
+                  <td>{{ row.risk }}</td>
+                  <td>{{ row.confidence }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">Pick sources on the left and click "Run Scenario" to see results here.</div>
+          {% endif %}
+        </div>
+
+        <!-- RIGHT: charts + explanations -->
+        <div class="panel right">
+          {% if chart1 %}
+          <h3>Most affected products</h3>
+          <img class="chart" src="data:image/png;base64,{{ chart1 }}" />
+          <div class="chart-explain">
+            Shows the 15 products whose price is predicted to change the most under this scenario. <b>Red</b> = price
+            expected to rise, <b>blue</b> = price expected to fall.
+          </div>
+
+          <h3>Risk level shift</h3>
+          <img class="chart" src="data:image/png;base64,{{ chart2 }}" />
+          <div class="chart-explain">
+            <b>Grey</b> bars show how many products were Low/Medium/High risk before the scenario; <b>red</b> bars show
+            the same after. More red on the right side means the scenario pushes more products into higher risk.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+
+    <script>
+      function toggleSource(src) {
+        // toggle chip visual state everywhere it appears (quick + more list)
+        document.querySelectorAll(".chip").forEach((chip) => {
+          if (chip.textContent.trim() === src) chip.classList.toggle("selected");
+        });
+
+        let container = document.getElementById("selectedInputs");
+        let existing = container.querySelector(`[data-src="${src}"]`);
+        if (existing) {
+          existing.remove();
+        } else {
+          let div = document.createElement("div");
+          div.className = "chip-input visible";
+          div.setAttribute("data-src", src);
+          div.innerHTML = `<label>${src}:</label><input type="number" name="pct_${src}" placeholder="%"><span>%</span>
+                          <input type="hidden" name="sources" value="${src}">`;
+          container.appendChild(div);
+        }
+      }
+
+      function toggleMore() {
+        document.getElementById("moreSources").classList.toggle("visible");
+      }
+    </script>
+  </body>
 </html>
