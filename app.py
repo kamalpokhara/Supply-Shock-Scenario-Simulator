@@ -93,7 +93,9 @@ def index():
     error = None
     chart1 = chart2 = None
     example_up = None       # ADD THIS
-    example_down = None  
+    example_down = None 
+    n_price_up = None
+    n_price_down = None
 
     if request.method == 'POST':
         selected_sources = request.form.getlist('sources')
@@ -121,6 +123,10 @@ def index():
             results_table = ok.to_dict('records')
             chart1, chart2 = make_charts(results_df)
 
+            ok_for_counts = results_df[results_df['status'] == 'ok']
+            n_price_up = int((ok_for_counts['price_delta_pct'] > 0).sum())
+            n_price_down = int((ok_for_counts['price_delta_pct'] < 0).sum())
+
              # pick a real example of each direction for the legend
             example_up = ok[ok['price_delta_pct'] > 0].sort_values('price_delta_pct', ascending=False)
             example_down = ok[ok['price_delta_pct'] < 0].sort_values('price_delta_pct')
@@ -142,6 +148,8 @@ def index():
         more_sources=MORE_SOURCES,
         example_up=example_up,
         example_down=example_down,
+        n_price_up=n_price_up,
+        n_price_down=n_price_down,
     )
 
 

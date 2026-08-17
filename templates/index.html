@@ -261,6 +261,7 @@
               <label>{{ src }}:</label>
               <input type="number" name="pct_{{ src }}" value="{{ factors.get(src, '') }}" placeholder="%" />
               <span>%</span>
+              <input type="hidden" name="sources" value="{{ src }}">
             </div>
             {% endfor %}
           </div>
@@ -290,12 +291,12 @@
                 <div class="label">Average price change</div>
               </div>
               <div class="summary-stat">
-                <div class="value">{{ "%.1f"|format(summary.median_price_delta_pct) }}%</div>
-                <div class="label">Typical price change</div>
+                <div class="value" style="color:#c0392b;">{{ n_price_up }}</div>
+                <div class="label">Products - price increase</div>
               </div>
               <div class="summary-stat">
-                <div class="value">{{ summary.n_products_risk_increased }}</div>
-                <div class="label">Products now riskier</div>
+                <div class="value" style="color:#2c7fb8;">{{ n_price_down }}</div>
+                <div class="label">Products - price decrease</div>
               </div>
             </div>
           </div>
