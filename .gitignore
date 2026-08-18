@@ -1,4 +1,4 @@
 venv/
-*.parquet
+# *.parquet
 __pycache__
 *.pyc
